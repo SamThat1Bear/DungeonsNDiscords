@@ -1,0 +1,9 @@
+poison
+darkness
+light
+destruction
+fire
+water
+storm
+lighting
+wind
