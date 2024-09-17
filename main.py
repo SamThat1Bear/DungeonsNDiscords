@@ -89,7 +89,7 @@ async def rollforstats(ctx):
 @bot.command()
 async def chooseclass(ctx, class_name):
     author = ctx.author
-    user = get_user_from_author(author)
+    user = get_user_from_author(active_users, author)
     log(f"User {author} attemps to select a class...")
 
     if not user:
@@ -115,7 +115,7 @@ async def chooseclass(ctx, class_name):
 @bot.command()
 async def displayitem(ctx, inventory_slot):
     author = ctx.author
-    user = get_user_from_author(author)
+    user = get_user_from_author(active_users, author)
     log(f"User {author} attempts to gather item information...")
     if not user:
         log("...no user profile")
@@ -146,8 +146,34 @@ async def displayitem(ctx, inventory_slot):
 @bot.command()
 async def inventory(ctx):
     author = ctx.author
-    user = get_user_from_author(author)
-    inventory_text = [f"{index+1}. {item}" for index, item in enumerate(user.get)]
+    user = get_user_from_author(active_users, author)
+    log(f"User {author} requested inventory embed...")
+    if user:
+        inventory_text = "\n".join([f"{index+1}. {item.get_name()}" for index, item in enumerate(user.get_inventory())])
 
+        inventory_embed = discord.Embed(title=f"{user.get_name()}'s Inventory", color=author.color)
+        inventory_embed.add_field(name="Items", value=inventory_text)
+        log("...embed sent successfully")
+        await ctx.send(embed=inventory_embed)
+    else:
+        log("...inventory embed retrieval failed")
+        await ctx.send("User not in the game")
+
+@bot.command()
+async def items(ctx, amount):
+    author = ctx.author
+    user: User = get_user_from_author(active_users, author)
+    if user:
+        for _ in range(int(amount)):
+            new_item = generate_item(user)
+            user.add_item_to_inv(new_item)
+        await ctx.send(f"added {amount} items to {user.get_name()} inventory")
+
+@bot.command()
+async def listitems(ctx):
+    author = ctx.author
+    user: User = get_user_from_author(active_users, author)
+    for item in user.get_inventory():
+        print(item.get_name())
 
 bot.run(ENVIROMENT["API_KEY"])
